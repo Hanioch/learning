@@ -4,7 +4,7 @@ Un site pour apprendre une chose à la fois. On choisit un **domaine** et un **f
 le texte est écrit à la demande par Claude avec recherche web, puis rangé dans un
 historique consultable.
 
-![Aperçu](https://img.shields.io/badge/Next.js-16-000) ![Prisma](https://img.shields.io/badge/Prisma-7-2D3748) ![SQLite](https://img.shields.io/badge/SQLite-local-003B57)
+![Next.js](https://img.shields.io/badge/Next.js-16-000) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6) ![Aucune dépendance native](https://img.shields.io/badge/d%C3%A9pendances%20natives-aucune-2ea44f)
 
 ## Ce que ça fait
 
@@ -15,7 +15,7 @@ historique consultable.
   direct, bribes de réflexion du modèle, puis le texte qui arrive au fil de l'eau.
 - Chaque texte est sourcé : les liens consultés sont cités dans le corps et listés
   en fin d'article.
-- Tout est archivé dans une base SQLite locale, filtrable par catégorie et par type,
+- Tout est archivé dans un fichier JSON local, filtrable par catégorie et par type,
   avec une page dédiée par texte (`/g/<id>`).
 
 ## Démarrer
@@ -23,9 +23,11 @@ historique consultable.
 ```bash
 npm install
 cp .env.example .env     # puis renseigner ANTHROPIC_API_KEY
-npm run db:migrate       # crée prisma/dev.db
 npm run dev
 ```
+
+`pnpm install` fonctionne aussi. Il n'y a pas d'étape de base de données : le
+fichier d'historique se crée tout seul.
 
 Le site tourne sur http://localhost:3000.
 
@@ -51,8 +53,7 @@ src/
                                  ajouter une catégorie ou un format
     claude.ts                    prompt système et construction de la requête
     article.ts                   découpage titre / résumé / corps
-    generations.ts               accès base
-    prisma.ts                    client Prisma (adaptateur SQLite)
+    generations.ts               persistance de l'historique (fichier JSON)
 ```
 
 Le flux de génération passe par du **SSE** (`text/event-stream`) : la route renvoie
@@ -75,19 +76,33 @@ Dans `src/app/api/generate/route.ts` :
 - `max_uses` de l'outil `web_search` limite le nombre de recherches par génération.
 - Le modèle est défini par `MODEL` dans `src/lib/claude.ts`.
 
-## Base de données
+## Stockage
 
-SQLite via Prisma, fichier `prisma/dev.db` (non versionné). Une seule table,
-`Generation`. Pour passer en Postgres plus tard : changer le `provider` dans
-`prisma/schema.prisma`, l'adaptateur dans `src/lib/prisma.ts`, et rejouer les
-migrations — le reste du code ne bouge pas.
+L'historique vit dans `data/generations.json` (non versionné), un simple tableau
+JSON lisible à la main. Les écritures sont sérialisées et atomiques — écriture
+dans un fichier temporaire puis renommage — pour qu'une coupure ne laisse jamais
+un fichier à moitié écrit.
+
+Ce choix est délibéré : le projet stocke une seule liste, consultée par une seule
+personne. Un fichier suffit, et surtout **le projet n'embarque aucune dépendance
+native** — rien à compiler à l'installation, quel que soit le gestionnaire de
+paquets, le système ou la version de Node. Une première version utilisait SQLite
+via Prisma ; le module natif `better-sqlite3` s'est révélé être une source
+d'échecs d'installation sans rapport avec le projet.
+
+Pour passer à une vraie base plus tard, `src/lib/generations.ts` est le seul
+fichier à réécrire : tout le reste de l'application passe par les cinq fonctions
+qu'il exporte (`listGenerations`, `getGeneration`, `saveGeneration`,
+`deleteGeneration`).
+
+Le chemin du fichier est configurable avec la variable d'environnement
+`DATA_FILE` (relative à la racine du projet).
 
 ## Scripts
 
 | Commande | Effet |
 | --- | --- |
 | `npm run dev` | serveur de développement |
-| `npm run build` | génère le client Prisma puis construit le site |
+| `npm run build` | construit le site |
+| `npm start` | lance la version construite |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript |
-| `npm run db:migrate` | applique le schéma à la base |
-| `npm run db:studio` | explorateur de base Prisma |

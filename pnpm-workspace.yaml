@@ -1,13 +1,6 @@
 # pnpm bloque par défaut les scripts d'installation des dépendances.
-# Ces quatre paquets en ont besoin : better-sqlite3 compile son module natif,
-# les paquets Prisma préparent leur client, et unrs-resolver sert à ESLint.
-# Sans cette autorisation, l'application échoue au démarrage sur
-# « Could not locate the bindings file ».
-#
-# Réglage lu par pnpm 11 et suivants. Pour pnpm 10, l'équivalent
-# (`onlyBuiltDependencies`) est dans package.json.
+# Le projet n'a plus aucune dépendance native : seul unrs-resolver, utilisé
+# par ESLint, a encore un script d'installation. On l'autorise ici pour que
+# `pnpm install` ne s'arrête pas sur ERR_PNPM_IGNORED_BUILDS.
 allowBuilds:
-  "@prisma/engines": true
-  better-sqlite3: true
-  prisma: true
   unrs-resolver: true

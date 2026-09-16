@@ -2,8 +2,7 @@
   LEARNING — COMMENT LANCER LE PROJET
 ===============================================================================
 
-Tout se fait dans un terminal, depuis le dossier du projet.
-Si tu viens de recuperer le projet, commence par t'y placer :
+Tout se fait dans un terminal, depuis le dossier du projet :
 
     cd chemin/vers/learning
 
@@ -13,61 +12,49 @@ Si tu viens de recuperer le projet, commence par t'y placer :
 -------------------------------------------------------------------------------
 
   - Node.js version 20 ou plus (verifie avec :  node -v  )
-  - npm, qui vient avec Node (verifie avec :  npm -v  )
+  - npm ou pnpm, au choix
   - Une cle API Anthropic, a creer ici :
-        https://console.anthropic.com/settings/keys
+        https://platform.claude.com/settings/keys
 
 
 -------------------------------------------------------------------------------
-  PREMIERE FOIS : 4 COMMANDES
+  PREMIERE FOIS : 3 COMMANDES
 -------------------------------------------------------------------------------
 
   1) Installer les dependances
 
         npm install
 
-     (Prend une a deux minutes. Genere aussi le client Prisma automatiquement.)
+     ou, si tu preferes pnpm :
 
-     Si tu preferes pnpm, "pnpm install" marche aussi. Le projet autorise
-     deja les quatre paquets qui doivent compiler du natif ou preparer
-     leur client (better-sqlite3, les deux paquets Prisma, unrs-resolver).
-     Sans cette autorisation pnpm les ignore et le site plante au
-     demarrage. Voir la section "SI CA NE MARCHE PAS".
+        pnpm install
 
 
   2) Creer le fichier de configuration
 
         cp .env.example .env
 
-     Sur Windows en PowerShell, utilise plutot :
+     Sur Windows en PowerShell :
 
         copy .env.example .env
 
-     Ouvre ensuite le fichier .env et remplace la ligne :
+     Ouvre ensuite .env et remplace la ligne :
 
         ANTHROPIC_API_KEY=sk-ant-...
 
      par ta vraie cle. Ne partage jamais ce fichier, il n'est pas versionne.
 
 
-  3) Creer la base de donnees
-
-        npm run db:migrate
-
-     Cela cree le fichier prisma/dev.db (SQLite) avec la bonne structure.
-     Si la commande demande un nom de migration, tape n'importe quoi, par
-     exemple : init
-
-
-  4) Demarrer le site
+  3) Demarrer le site
 
         npm run dev
 
-     Puis ouvre dans ton navigateur :
+     Puis ouvre :   http://localhost:3000
 
-        http://localhost:3000
+     Pour arreter : Ctrl + C dans le terminal.
 
-     Pour arreter le serveur : Ctrl + C dans le terminal.
+  Il n'y a pas d'etape de base de donnees. L'historique est un simple
+  fichier JSON, cree tout seul au premier texte genere.
 
 
 -------------------------------------------------------------------------------
@@ -76,9 +63,8 @@ Si tu viens de recuperer le projet, commence par t'y placer :
 
         npm run dev
 
-  Les etapes 1 a 3 ne sont a refaire que si :
-    - tu changes de machine ou tu reclones le projet  -> refaire 1, 2, 3
-    - tu modifies prisma/schema.prisma                -> refaire 3
+  Refais "npm install" uniquement apres un "git pull" qui change les
+  dependances, ou si tu reclones le projet.
 
 
 -------------------------------------------------------------------------------
@@ -89,22 +75,27 @@ Si tu viens de recuperer le projet, commence par t'y placer :
                        C'est celle que tu utilises au quotidien.
 
   npm run build        Construit la version optimisee du site.
-                       A lancer avant "npm start".
 
   npm start            Lance la version construite (mode production).
-                       Necessite d'avoir fait "npm run build" avant.
+                       Necessite "npm run build" avant.
 
   npm run lint         Verifie le style du code (ESLint).
 
   npm run typecheck    Verifie les types TypeScript.
 
-  npm run db:migrate   Applique le schema a la base de donnees.
 
-  npm run db:studio    Ouvre une interface web pour regarder et modifier
-                       le contenu de la base directement.
+-------------------------------------------------------------------------------
+  OU SONT STOCKES LES TEXTES GENERES
+-------------------------------------------------------------------------------
 
-  npm run db:reset     ATTENTION : efface toute la base et la recree vide.
-                       Tout l'historique genere est perdu.
+  Dans le fichier :   data/generations.json
+
+  C'est un simple tableau JSON, lisible et modifiable a la main. Il est
+  cree automatiquement au premier texte genere.
+
+  - Pour sauvegarder ton historique : copie ce fichier.
+  - Pour repartir de zero : supprime-le (ou supprime tout le dossier data).
+  - Il n'est pas envoye sur GitHub (il est dans .gitignore).
 
 
 -------------------------------------------------------------------------------
@@ -114,68 +105,45 @@ Si tu viens de recuperer le projet, commence par t'y placer :
   > "ANTHROPIC_API_KEY n'est pas definie"
 
     Le fichier .env est absent, mal rempli, ou le serveur a ete demarre
-    avant sa creation. Verifie le contenu de .env, puis arrete le serveur
-    (Ctrl + C) et relance "npm run dev".
+    avant sa creation. Verifie .env, puis arrete le serveur (Ctrl + C)
+    et relance "npm run dev".
     Le site s'affiche quand meme dans ce cas : seule la generation echoue.
-
-
-  > "Error: P1003" ou une erreur qui parle de base introuvable
-
-    La base n'existe pas encore. Lance :   npm run db:migrate
-
-
-  > "Cannot find module '@/generated/prisma/client'"
-
-    Le client Prisma n'a pas ete genere. Lance :   npx prisma generate
-
-
-  > "Could not locate the bindings file" / "better_sqlite3.node"
-  > ou "Ignored build scripts: ..." affiche par pnpm
-
-    Tu utilises pnpm. Par securite, pnpm refuse par defaut d'executer les
-    scripts d'installation des paquets. Or quatre paquets du projet en ont
-    besoin : better-sqlite3 compile son module natif, les deux paquets
-    Prisma preparent leur client, et unrs-resolver sert a ESLint.
-
-    Le projet contient deja les autorisations, dans DEUX fichiers, parce
-    que pnpm a change le nom du reglage en cours de route :
-
-      - pnpm-workspace.yaml -> "allowBuilds"          (pnpm 11 et suivants)
-      - package.json        -> "onlyBuiltDependencies" (pnpm 10)
-
-    Il suffit donc de relancer, sans rien supprimer :
-
-        pnpm install
-
-    Tu dois voir defiler des lignes "install$ prebuild-install" et
-    "postinstall$". Verifie ensuite que le fichier natif existe :
-
-        find node_modules/.pnpm -name "better_sqlite3.node"
-
-    Si rien ne sort, force la reconstruction :
-
-        pnpm rebuild better-sqlite3
-
-    En dernier recours, laisse pnpm ecrire lui-meme l'autorisation au bon
-    endroit pour ta version :
-
-        pnpm approve-builds
-
-    Pour connaitre ta version de pnpm :   pnpm --version
 
 
   > "EADDRINUSE" ou "port 3000 already in use"
 
-    Un autre programme occupe le port 3000. Soit tu fermes l'autre
-    programme, soit tu lances le site sur un autre port :
+    Un autre programme occupe le port 3000. Ferme-le, ou lance le site
+    sur un autre port :
 
         npm run dev -- -p 3001
 
 
-  > Le site s'affiche mais l'historique est vide apres un redemarrage
+  > Une erreur qui parle de "bindings file" ou d'un fichier ".node"
 
-    Verifie que le fichier prisma/dev.db existe bien. S'il a ete supprime,
-    relance :   npm run db:migrate
+    Cela signifie qu'un module natif traine encore dans node_modules.
+    Le projet n'en utilise plus aucun. Nettoie et reinstalle :
+
+        rm -rf node_modules
+        npm install
+
+    Avec pnpm :
+
+        rm -rf node_modules
+        pnpm install
+
+
+  > Le site affiche une erreur apres un "git pull"
+
+    Les dependances ont peut-etre change. Relance :
+
+        npm install
+
+
+  > L'historique est vide alors que j'avais des textes
+
+    Verifie que le fichier data/generations.json existe et qu'il contient
+    bien un tableau JSON valide. S'il est corrompu, le site l'ignore et
+    affiche un historique vide, en le signalant dans le terminal.
 
 
 -------------------------------------------------------------------------------
@@ -186,11 +154,13 @@ Si tu viens de recuperer le projet, commence par t'y placer :
     elle est facturee sur ton compte Anthropic et prend en general
     entre 30 secondes et 2 minutes.
 
-  - La base est un simple fichier : prisma/dev.db
-    Pour sauvegarder ton historique, il suffit de copier ce fichier.
-    Il n'est pas envoye sur GitHub (il est dans .gitignore).
+  - Pour plafonner la depense : page Billing de la console Anthropic,
+    section "Spend limits".
 
   - Pour ajouter une categorie ou un type de contenu dans les listes
     deroulantes, edite le fichier :   src/lib/taxonomy.ts
+
+  - Pour changer de modele (et payer moins cher), edite la constante
+    MODEL dans :   src/lib/claude.ts
 
 ===============================================================================
