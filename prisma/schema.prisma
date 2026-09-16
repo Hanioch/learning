@@ -1,0 +1,27 @@
+// Schéma de la base : une seule table, l'historique des générations.
+// Doc : https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Generation {
+  id        String   @id @default(cuid())
+  category  String
+  type      String
+  topic     String?
+  title     String
+  summary   String
+  content   String
+  sources   String   @default("[]")
+  model     String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([category, type])
+}
