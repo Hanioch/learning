@@ -1,0 +1,155 @@
+===============================================================================
+  LEARNING — COMMENT LANCER LE PROJET
+===============================================================================
+
+Tout se fait dans un terminal, depuis le dossier du projet.
+Si tu viens de recuperer le projet, commence par t'y placer :
+
+    cd chemin/vers/learning
+
+
+-------------------------------------------------------------------------------
+  CE QU'IL FAUT AVOIR INSTALLE AVANT
+-------------------------------------------------------------------------------
+
+  - Node.js version 20 ou plus (verifie avec :  node -v  )
+  - npm, qui vient avec Node (verifie avec :  npm -v  )
+  - Une cle API Anthropic, a creer ici :
+        https://console.anthropic.com/settings/keys
+
+
+-------------------------------------------------------------------------------
+  PREMIERE FOIS : 4 COMMANDES
+-------------------------------------------------------------------------------
+
+  1) Installer les dependances
+
+        npm install
+
+     (Prend une a deux minutes. Genere aussi le client Prisma automatiquement.)
+
+
+  2) Creer le fichier de configuration
+
+        cp .env.example .env
+
+     Sur Windows en PowerShell, utilise plutot :
+
+        copy .env.example .env
+
+     Ouvre ensuite le fichier .env et remplace la ligne :
+
+        ANTHROPIC_API_KEY=sk-ant-...
+
+     par ta vraie cle. Ne partage jamais ce fichier, il n'est pas versionne.
+
+
+  3) Creer la base de donnees
+
+        npm run db:migrate
+
+     Cela cree le fichier prisma/dev.db (SQLite) avec la bonne structure.
+     Si la commande demande un nom de migration, tape n'importe quoi, par
+     exemple : init
+
+
+  4) Demarrer le site
+
+        npm run dev
+
+     Puis ouvre dans ton navigateur :
+
+        http://localhost:3000
+
+     Pour arreter le serveur : Ctrl + C dans le terminal.
+
+
+-------------------------------------------------------------------------------
+  LES FOIS SUIVANTES : 1 SEULE COMMANDE
+-------------------------------------------------------------------------------
+
+        npm run dev
+
+  Les etapes 1 a 3 ne sont a refaire que si :
+    - tu changes de machine ou tu reclones le projet  -> refaire 1, 2, 3
+    - tu modifies prisma/schema.prisma                -> refaire 3
+
+
+-------------------------------------------------------------------------------
+  TOUTES LES COMMANDES DISPONIBLES
+-------------------------------------------------------------------------------
+
+  npm run dev          Serveur de developpement (rechargement automatique).
+                       C'est celle que tu utilises au quotidien.
+
+  npm run build        Construit la version optimisee du site.
+                       A lancer avant "npm start".
+
+  npm start            Lance la version construite (mode production).
+                       Necessite d'avoir fait "npm run build" avant.
+
+  npm run lint         Verifie le style du code (ESLint).
+
+  npm run typecheck    Verifie les types TypeScript.
+
+  npm run db:migrate   Applique le schema a la base de donnees.
+
+  npm run db:studio    Ouvre une interface web pour regarder et modifier
+                       le contenu de la base directement.
+
+  npm run db:reset     ATTENTION : efface toute la base et la recree vide.
+                       Tout l'historique genere est perdu.
+
+
+-------------------------------------------------------------------------------
+  SI CA NE MARCHE PAS
+-------------------------------------------------------------------------------
+
+  > "ANTHROPIC_API_KEY n'est pas definie"
+
+    Le fichier .env est absent, mal rempli, ou le serveur a ete demarre
+    avant sa creation. Verifie le contenu de .env, puis arrete le serveur
+    (Ctrl + C) et relance "npm run dev".
+    Le site s'affiche quand meme dans ce cas : seule la generation echoue.
+
+
+  > "Error: P1003" ou une erreur qui parle de base introuvable
+
+    La base n'existe pas encore. Lance :   npm run db:migrate
+
+
+  > "Cannot find module '@/generated/prisma/client'"
+
+    Le client Prisma n'a pas ete genere. Lance :   npx prisma generate
+
+
+  > "EADDRINUSE" ou "port 3000 already in use"
+
+    Un autre programme occupe le port 3000. Soit tu fermes l'autre
+    programme, soit tu lances le site sur un autre port :
+
+        npm run dev -- -p 3001
+
+
+  > Le site s'affiche mais l'historique est vide apres un redemarrage
+
+    Verifie que le fichier prisma/dev.db existe bien. S'il a ete supprime,
+    relance :   npm run db:migrate
+
+
+-------------------------------------------------------------------------------
+  BON A SAVOIR
+-------------------------------------------------------------------------------
+
+  - Chaque generation appelle l'API Claude avec de la recherche web :
+    elle est facturee sur ton compte Anthropic et prend en general
+    entre 30 secondes et 2 minutes.
+
+  - La base est un simple fichier : prisma/dev.db
+    Pour sauvegarder ton historique, il suffit de copier ce fichier.
+    Il n'est pas envoye sur GitHub (il est dans .gitignore).
+
+  - Pour ajouter une categorie ou un type de contenu dans les listes
+    deroulantes, edite le fichier :   src/lib/taxonomy.ts
+
+===============================================================================
