@@ -3,29 +3,17 @@ export type Source = {
   url: string;
 };
 
-/** Ce que le client manipule : une génération, sources déjà désérialisées. */
-export type Generation = {
-  id: string;
+/** Un texte du site, tel que lu depuis `content/`. */
+export type Article = {
+  /** Nom du fichier sans extension : sert d'URL. */
+  slug: string;
   category: string;
   type: string;
-  topic: string | null;
   title: string;
   summary: string;
+  /** Le corps en markdown, sans le titre ni le résumé. */
   content: string;
   sources: Source[];
-  model: string;
-  createdAt: string;
+  /** Date de publication au format AAAA-MM-JJ. */
+  date: string;
 };
-
-/** Les phases affichées pendant la génération, dans l'ordre. */
-export type Phase = "connecting" | "thinking" | "searching" | "writing" | "saving";
-
-/** Messages poussés par /api/generate sur le flux SSE. */
-export type StreamEvent =
-  | { type: "phase"; phase: Phase }
-  | { type: "thinking"; text: string }
-  | { type: "search"; query: string }
-  | { type: "delta"; text: string }
-  | { type: "sources"; sources: Source[] }
-  | { type: "done"; generation: Generation }
-  | { type: "error"; message: string };

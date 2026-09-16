@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { categoryLabel, typeLabel } from "@/lib/taxonomy";
-import type { Source } from "@/lib/types";
+import type { Article as ArticleType } from "@/lib/types";
 import { Markdown } from "./Markdown";
 
 function hostOf(url: string) {
@@ -11,6 +11,17 @@ function hostOf(url: string) {
   }
 }
 
+export function formatDate(date: string) {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export function Tag({ children }: { children: React.ReactNode }) {
   return (
     <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted">
@@ -19,68 +30,36 @@ export function Tag({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Article({
-  title,
-  summary,
-  content,
-  sources,
-  category,
-  type,
-  createdAt,
-  streaming = false,
-}: {
-  title: string;
-  summary: string;
-  content: string;
-  sources: Source[];
-  category: string;
-  type: string;
-  createdAt?: string;
-  streaming?: boolean;
-}) {
+export function Article({ article }: { article: ArticleType }) {
   return (
     <article className="animate-fade-up">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Tag>{categoryLabel(category)}</Tag>
-        <Tag>{typeLabel(type)}</Tag>
-        {createdAt && (
-          <span className="text-xs text-muted">
-            {new Date(createdAt).toLocaleDateString("fr-FR", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </span>
-        )}
+        <Tag>{categoryLabel(article.category)}</Tag>
+        <Tag>{typeLabel(article.type)}</Tag>
+        <span className="text-xs text-muted">{formatDate(article.date)}</span>
       </div>
 
-      {title && (
-        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-          {title}
-        </h1>
-      )}
+      <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+        {article.title}
+      </h1>
 
-      {summary && (
-        <p className="mt-3 border-l-2 border-accent pl-4 text-lg leading-relaxed text-muted">
-          {summary}
-        </p>
-      )}
+      <p className="mt-3 border-l-2 border-accent pl-4 text-lg leading-relaxed text-muted">
+        {article.summary}
+      </p>
 
-      <div className={`prose mt-8 ${streaming ? "caret" : ""}`}>
-        <Markdown>{content}</Markdown>
+      <div className="prose mt-8">
+        <Markdown>{article.content}</Markdown>
       </div>
 
-      {sources.length > 0 && (
+      {article.sources.length > 0 && (
         <section className="mt-12 border-t border-border pt-6">
           <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.12em] text-muted">
             Sources consultées
           </h2>
           <ol className="space-y-2">
-            {sources.map((source, index) => (
+            {article.sources.map((source, index) => (
               <li key={source.url} className="flex gap-3 text-sm">
-                <span className="w-5 shrink-0 tabular-nums text-muted">
-                  {index + 1}.
-                </span>
+                <span className="w-5 shrink-0 tabular-nums text-muted">{index + 1}.</span>
                 <a
                   href={source.url}
                   target="_blank"
