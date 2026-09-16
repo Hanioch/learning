@@ -29,9 +29,10 @@ Si tu viens de recuperer le projet, commence par t'y placer :
      (Prend une a deux minutes. Genere aussi le client Prisma automatiquement.)
 
      Si tu preferes pnpm, "pnpm install" marche aussi. Le projet autorise
-     deja les paquets qui ont besoin de compiler du natif (better-sqlite3
-     et Prisma) ; sans cette autorisation pnpm les ignore silencieusement
-     et le site plante au demarrage. Voir la section "SI CA NE MARCHE PAS".
+     deja les quatre paquets qui doivent compiler du natif ou preparer
+     leur client (better-sqlite3, les deux paquets Prisma, unrs-resolver).
+     Sans cette autorisation pnpm les ignore et le site plante au
+     demarrage. Voir la section "SI CA NE MARCHE PAS".
 
 
   2) Creer le fichier de configuration
@@ -129,30 +130,38 @@ Si tu viens de recuperer le projet, commence par t'y placer :
 
 
   > "Could not locate the bindings file" / "better_sqlite3.node"
+  > ou "Ignored build scripts: ..." affiche par pnpm
 
     Tu utilises pnpm. Par securite, pnpm refuse par defaut d'executer les
-    scripts d'installation des paquets, or better-sqlite3 en a besoin pour
-    compiler sa partie native.
+    scripts d'installation des paquets. Or quatre paquets du projet en ont
+    besoin : better-sqlite3 compile son module natif, les deux paquets
+    Prisma preparent leur client, et unrs-resolver sert a ESLint.
 
-    Le projet contient deja l'autorisation necessaire (champ "pnpm" >
-    "onlyBuiltDependencies" dans package.json). Il suffit de relancer :
+    Le projet contient deja les autorisations, dans DEUX fichiers, parce
+    que pnpm a change le nom du reglage en cours de route :
+
+      - pnpm-workspace.yaml -> "allowBuilds"          (pnpm 11 et suivants)
+      - package.json        -> "onlyBuiltDependencies" (pnpm 10)
+
+    Il suffit donc de relancer, sans rien supprimer :
 
         pnpm install
 
-    Si l'erreur persiste, force la reconstruction :
-
-        pnpm rebuild better-sqlite3
-
-    Tu peux verifier que le fichier natif existe bien :
+    Tu dois voir defiler des lignes "install$ prebuild-install" et
+    "postinstall$". Verifie ensuite que le fichier natif existe :
 
         find node_modules/.pnpm -name "better_sqlite3.node"
 
+    Si rien ne sort, force la reconstruction :
 
-  > "Ignored build scripts: ..." affiche par pnpm
+        pnpm rebuild better-sqlite3
 
-    Meme cause que ci-dessus. Les paquets concernes sont deja autorises
-    dans package.json ; relance "pnpm install". Pour en autoriser d'autres
-    un jour :   pnpm approve-builds
+    En dernier recours, laisse pnpm ecrire lui-meme l'autorisation au bon
+    endroit pour ta version :
+
+        pnpm approve-builds
+
+    Pour connaitre ta version de pnpm :   pnpm --version
 
 
   > "EADDRINUSE" ou "port 3000 already in use"
