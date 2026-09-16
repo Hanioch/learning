@@ -8,107 +8,96 @@ Tout se fait dans un terminal, depuis le dossier du projet :
 
 
 -------------------------------------------------------------------------------
-  CE QU'IL FAUT AVOIR INSTALLE AVANT
+  CE QU'IL FAUT AVOIR INSTALLE
 -------------------------------------------------------------------------------
 
   - Node.js version 20 ou plus (verifie avec :  node -v  )
   - npm ou pnpm, au choix
-  - Une cle API Anthropic, a creer ici :
-        https://platform.claude.com/settings/keys
+
+  Il n'y a PLUS besoin de cle API. Le site ne fait aucun appel reseau : il
+  se contente de lire les textes deja ecrits dans le dossier content/.
 
 
 -------------------------------------------------------------------------------
-  PREMIERE FOIS : 3 COMMANDES
+  LANCER LE SITE : 2 COMMANDES
 -------------------------------------------------------------------------------
 
-  1) Installer les dependances
+  1) Installer les dependances (la premiere fois seulement)
 
         npm install
 
-     ou, si tu preferes pnpm :
-
-        pnpm install
-
-
-  2) Creer le fichier de configuration
-
-        cp .env.example .env
-
-     Sur Windows en PowerShell :
-
-        copy .env.example .env
-
-     Ouvre ensuite .env et remplace la ligne :
-
-        ANTHROPIC_API_KEY=sk-ant-...
-
-     par ta vraie cle. Ne partage jamais ce fichier, il n'est pas versionne.
-
-
-  3) Demarrer le site
+  2) Demarrer
 
         npm run dev
 
      Puis ouvre :   http://localhost:3000
-
      Pour arreter : Ctrl + C dans le terminal.
 
-  Il n'y a pas d'etape de base de donnees. L'historique est un simple
-  fichier JSON, cree tout seul au premier texte genere.
+  Les fois suivantes, "npm run dev" suffit. Refais "npm install"
+  uniquement apres un "git pull" qui change les dependances.
 
 
 -------------------------------------------------------------------------------
-  LES FOIS SUIVANTES : 1 SEULE COMMANDE
+  REMPLIR LA BIBLIOTHEQUE
 -------------------------------------------------------------------------------
 
-        npm run dev
+  Les textes sont ecrits a l'avance, pas a la demande. Dans une session
+  Claude Code ouverte sur ce dossier :
 
-  Refais "npm install" uniquement apres un "git pull" qui change les
-  dependances, ou si tu reclones le projet.
+        /generer          ecrit 3 textes
+        /generer 5        ecrit 5 textes
+
+  La commande choisit elle-meme les sujets : elle prend la categorie et le
+  format les moins representes, evite les titres deja traites, cherche ses
+  faits sur le web, ecrit les fichiers, les verifie et les commite.
+
+  Pour en ajouter automatiquement chaque jour :
+
+        /loop 24h /generer 3
+
+  Le site relit le dossier a chaque chargement de page : les nouveaux
+  textes apparaissent sans avoir a redemarrer quoi que ce soit.
 
 
 -------------------------------------------------------------------------------
   TOUTES LES COMMANDES DISPONIBLES
 -------------------------------------------------------------------------------
 
-  npm run dev          Serveur de developpement (rechargement automatique).
-                       C'est celle que tu utilises au quotidien.
+  npm run dev             Serveur de developpement. Celle du quotidien.
 
-  npm run build        Construit la version optimisee du site.
+  npm run build           Construit la version optimisee du site.
 
-  npm start            Lance la version construite (mode production).
-                       Necessite "npm run build" avant.
+  npm start               Lance la version construite (necessite build).
 
-  npm run lint         Verifie le style du code (ESLint).
+  npm run check:content   Verifie les fichiers de content/ : format,
+                          categories, dates, doublons, URLs des sources.
 
-  npm run typecheck    Verifie les types TypeScript.
+  npm run lint            Verifie le style du code (ESLint).
+
+  npm run typecheck       Verifie les types TypeScript.
 
 
 -------------------------------------------------------------------------------
-  OU SONT STOCKES LES TEXTES GENERES
+  OU SONT LES TEXTES
 -------------------------------------------------------------------------------
 
-  Dans le fichier :   data/generations.json
+  Dans le dossier :   content/
 
-  C'est un simple tableau JSON, lisible et modifiable a la main. Il est
-  cree automatiquement au premier texte genere.
+  Un fichier markdown par texte, versionne avec le code. Le nom du fichier
+  sert d'adresse : content/2026-09-17-mon-sujet.md est lisible sur
+  http://localhost:3000/a/2026-09-17-mon-sujet
 
-  - Pour sauvegarder ton historique : copie ce fichier.
-  - Pour repartir de zero : supprime-le (ou supprime tout le dossier data).
-  - Il n'est pas envoye sur GitHub (il est dans .gitignore).
+  - Pour corriger un texte : edite le fichier, c'est du markdown.
+  - Pour en supprimer un : supprime le fichier.
+  - Pour en masquer un sans le supprimer : renomme-le avec un _ devant
+    (par exemple _2026-09-17-mon-sujet.md).
+
+  Le format exact est explique dans content/README.md.
 
 
 -------------------------------------------------------------------------------
   SI CA NE MARCHE PAS
 -------------------------------------------------------------------------------
-
-  > "ANTHROPIC_API_KEY n'est pas definie"
-
-    Le fichier .env est absent, mal rempli, ou le serveur a ete demarre
-    avant sa creation. Verifie .env, puis arrete le serveur (Ctrl + C)
-    et relance "npm run dev".
-    Le site s'affiche quand meme dans ce cas : seule la generation echoue.
-
 
   > "EADDRINUSE" ou "port 3000 already in use"
 
@@ -118,18 +107,23 @@ Tout se fait dans un terminal, depuis le dossier du projet :
         npm run dev -- -p 3001
 
 
+  > Un texte n'apparait pas sur le site
+
+    Il est probablement mal forme : le site ignore les fichiers invalides
+    au lieu de tomber. Lance :
+
+        npm run check:content
+
+    Il te dira exactement quel fichier et quel champ posent probleme.
+
+
   > Une erreur qui parle de "bindings file" ou d'un fichier ".node"
 
-    Cela signifie qu'un module natif traine encore dans node_modules.
-    Le projet n'en utilise plus aucun. Nettoie et reinstalle :
+    Un module natif traine encore dans node_modules. Le projet n'en
+    utilise plus aucun. Nettoie et reinstalle :
 
         rm -rf node_modules
         npm install
-
-    Avec pnpm :
-
-        rm -rf node_modules
-        pnpm install
 
 
   > Le site affiche une erreur apres un "git pull"
@@ -139,28 +133,14 @@ Tout se fait dans un terminal, depuis le dossier du projet :
         npm install
 
 
-  > L'historique est vide alors que j'avais des textes
-
-    Verifie que le fichier data/generations.json existe et qu'il contient
-    bien un tableau JSON valide. S'il est corrompu, le site l'ignore et
-    affiche un historique vide, en le signalant dans le terminal.
-
-
 -------------------------------------------------------------------------------
   BON A SAVOIR
 -------------------------------------------------------------------------------
 
-  - Chaque generation appelle l'API Claude avec de la recherche web :
-    elle est facturee sur ton compte Anthropic et prend en general
-    entre 30 secondes et 2 minutes.
-
-  - Pour plafonner la depense : page Billing de la console Anthropic,
-    section "Spend limits".
-
   - Pour ajouter une categorie ou un type de contenu dans les listes
-    deroulantes, edite le fichier :   src/lib/taxonomy.ts
+    deroulantes, edite :   src/lib/taxonomy.ts
 
-  - Pour changer de modele (et payer moins cher), edite la constante
-    MODEL dans :   src/lib/claude.ts
+  - Pour changer le ton, la longueur ou les exigences de sourçage des
+    textes generes, edite :   .claude/commands/generer.md
 
 ===============================================================================
