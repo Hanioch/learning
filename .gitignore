@@ -40,13 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
-
-# base SQLite locale
-/prisma/*.db
-/prisma/*.db-journal
-/prisma/*.db-wal
-/prisma/*.db-shm
+# historique genere localement
+/data
 
 # le modèle de configuration doit être versionné
 !.env.example
