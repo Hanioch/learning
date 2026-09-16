@@ -28,6 +28,11 @@ Si tu viens de recuperer le projet, commence par t'y placer :
 
      (Prend une a deux minutes. Genere aussi le client Prisma automatiquement.)
 
+     Si tu preferes pnpm, "pnpm install" marche aussi. Le projet autorise
+     deja les paquets qui ont besoin de compiler du natif (better-sqlite3
+     et Prisma) ; sans cette autorisation pnpm les ignore silencieusement
+     et le site plante au demarrage. Voir la section "SI CA NE MARCHE PAS".
+
 
   2) Creer le fichier de configuration
 
@@ -121,6 +126,33 @@ Si tu viens de recuperer le projet, commence par t'y placer :
   > "Cannot find module '@/generated/prisma/client'"
 
     Le client Prisma n'a pas ete genere. Lance :   npx prisma generate
+
+
+  > "Could not locate the bindings file" / "better_sqlite3.node"
+
+    Tu utilises pnpm. Par securite, pnpm refuse par defaut d'executer les
+    scripts d'installation des paquets, or better-sqlite3 en a besoin pour
+    compiler sa partie native.
+
+    Le projet contient deja l'autorisation necessaire (champ "pnpm" >
+    "onlyBuiltDependencies" dans package.json). Il suffit de relancer :
+
+        pnpm install
+
+    Si l'erreur persiste, force la reconstruction :
+
+        pnpm rebuild better-sqlite3
+
+    Tu peux verifier que le fichier natif existe bien :
+
+        find node_modules/.pnpm -name "better_sqlite3.node"
+
+
+  > "Ignored build scripts: ..." affiche par pnpm
+
+    Meme cause que ci-dessus. Les paquets concernes sont deja autorises
+    dans package.json ; relance "pnpm install". Pour en autoriser d'autres
+    un jour :   pnpm approve-builds
 
 
   > "EADDRINUSE" ou "port 3000 already in use"
